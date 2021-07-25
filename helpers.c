@@ -59,23 +59,6 @@ void movePlayer(struct Entity * player)
             player->yVel = 1;
             break;
 
-        // FOR DEBUGGING: Show coordinates
-        case J_A:
-            printf("X %d / Y %d \n", player->x, player->y);
-            // Stop player
-            player->xVel = 0;
-            player->yVel = 0;
-            // Prevent multiple prints
-            waitpadup();
-            break;
-        
-        // FOR DEBUGGING: Eraser
-        case J_B:
-            printf(" \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n");
-            // Prevent multiple prints
-            waitpadup();
-            break;
-
         default:
             break;
     }
@@ -84,9 +67,9 @@ void movePlayer(struct Entity * player)
 // Changes the velocity to 0 if the player is about to collide with wall.
 void checkWallCollisions(struct Entity * player)
 {
-    if (player->x == REAL_LEFT)
+    if (player->x == REAL_LEFT + SPRITE_SIZE)
     {
-        if (player->y == REAL_TOP) // Top left corner
+        if (player->y == REAL_TOP + SPRITE_SIZE) // Top left corner
         {
             if (player->xVel == -1 || player->yVel == -1)
             {
@@ -95,7 +78,7 @@ void checkWallCollisions(struct Entity * player)
                 return;
             }
         }
-        else if (player->y == REAL_HEIGHT) // Bottom left corner
+        else if (player->y == MAP_SIZE) // Bottom left corner
         {
             if (player->xVel == -1 || player->yVel == 1)
             {
@@ -110,9 +93,9 @@ void checkWallCollisions(struct Entity * player)
             return;
         } 
     }
-    else if (player->x == REAL_WIDTH)
+    else if (player->x == MAP_SIZE - SPRITE_SIZE)
     {
-        if (player->y == REAL_TOP) // Top right corner
+        if (player->y == REAL_TOP + SPRITE_SIZE) // Top right corner
         {
             if (player->xVel == 1 || player->yVel == -1)
             {
@@ -120,7 +103,7 @@ void checkWallCollisions(struct Entity * player)
                 player->yVel = 0;
             }
         }
-        else if (player->y == REAL_HEIGHT) // Bottom right corner
+        else if (player->y == MAP_SIZE) // Bottom right corner
         {
             if (player->xVel == 1 || player->yVel == 1)
             {
@@ -135,7 +118,7 @@ void checkWallCollisions(struct Entity * player)
         }
     }
 
-    if (player->y == REAL_TOP) // Just top
+    if (player->y == REAL_TOP + SPRITE_SIZE) // Just top
     {
         if (player->yVel == -1)
         {
@@ -143,12 +126,71 @@ void checkWallCollisions(struct Entity * player)
             return;
         }
     }
-    else if (player->y == REAL_HEIGHT) // Just bottom
+    else if (player->y == MAP_SIZE) // Just bottom
     {
         if (player->yVel == 1)
         {
             player->yVel = 0;
             return;
+        }
+    }
+}
+
+// Returns 1 if the game should scroll map, 0 if it should scroll sprite.
+int scrollMapOrNot(struct Entity * player)
+{
+    // Lower half of the map
+    if (player->y >= MIDDLE_Y2 && player->yVel != 0)
+    {
+        if (player->y == MIDDLE_Y2) return 1;
+        else return 0;
+    } 
+
+    if (player->x <= MIDDLE_X) // Left side of the map
+    {
+        if (player->y <= MIDDLE_Y) return 0; // Top left
+        else
+        {
+            if (player->y >= MIDDLE_Y2) return 0; // Bottom left
+            else
+            {
+                if (player->xVel == 0) return 1; // Mid-left
+                else return 0;
+            } 
+        }
+    }
+    else 
+    {
+        if (player->x >= MIDDLE_X2) // Right side of the map
+        {
+            if (player->x == MIDDLE_X2) return 1;
+            if (player->y <= MIDDLE_Y) return 0; // Top right
+            else
+            {
+                if (player->y >= MIDDLE_Y2) return 0; // Bottom right
+                else
+                {
+                    if (player->xVel == 0) return 1; // Mid-right
+                    else return 0;
+                } 
+            }
+        }
+        else // Middle part (on the x axis)
+        {
+            if (player->y <= MIDDLE_Y)
+            {
+                if (player->yVel == 0) return 1; // Mid-top
+                else return 0; 
+            } 
+            else
+            {
+                if (player->y >= MIDDLE_Y2)
+                {
+                    if (player->yVel == 0) return 1; // Mid-bottom
+                    else return 0; 
+                } 
+                else return 1; // Middle AF
+            }
         }
     }
 }
