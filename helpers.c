@@ -223,7 +223,11 @@ int scrollMapOrNot(struct Entity * player)
         {
             if (player->x == MIDDLE_X2 && player->xVel == -1) return 1;
 
-            if (player->y <= MIDDLE_Y) return 0; // Top right
+            if (player->y <= MIDDLE_Y)
+            {
+                if (player->y == MIDDLE_Y && player->yVel == 1) return 1;
+                else return 0; // Top right
+            } 
             else
             {
                 if (player->y >= MIDDLE_Y2)
