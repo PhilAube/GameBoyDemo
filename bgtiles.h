@@ -1,6 +1,6 @@
 /*
 
- EXPORT.H
+ BGTILES.H
 
  Include File.
 
@@ -10,7 +10,7 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 8
-  Tiles                : 0 to 2
+  Tiles                : 0 to 3
 
   Palette colors       : None.
   SGB Palette          : None.
@@ -28,4 +28,4 @@
 /* Start of tile array. */
 extern unsigned char bgtiles[];
 
-/* End of EXPORT.H */
+/* End of BGTILES.H */

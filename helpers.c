@@ -1,4 +1,44 @@
-int detectEdges(struct Entity * player);
+// Initializes the player and sets their sprite.
+void setupPlayer(struct Entity * player)
+{
+    player->id = 0;
+    player->x = MAP_CENTER_X;
+    player->y = MAP_CENTER_Y;
+    player->xVel = 0;
+    player->yVel = 0;
+
+    // Setup player sprite
+    set_sprite_tile(player->id, 0);
+    move_sprite(player->id, MIDDLE_X, MIDDLE_Y);
+
+    // Scroll the background to the player.
+    scroll_bkg(MAP_CENTER_X - MIDDLE_X, MAP_CENTER_Y - MIDDLE_Y);
+}
+
+// Prepares the 4 entites for the animateEntities method.
+void setupEntities(struct Entity entities[])
+{
+    for (int i = 0; i < SPRITE_QTY; i++)
+    {
+        entities[i].id = i + 1;
+        entities[i].xVel = 0;
+        entities[i].yVel = 0;
+        set_sprite_tile(i + 1, 2);
+    }
+
+    move_sprite(1, REAL_LEFT, REAL_TOP);
+    entities[0].x = REAL_LEFT;
+    entities[0].y = REAL_TOP;
+    move_sprite(2, REAL_WIDTH, REAL_TOP);
+    entities[1].x = REAL_WIDTH;
+    entities[1].y = REAL_TOP;
+    move_sprite(3, REAL_LEFT, REAL_HEIGHT);
+    entities[2].x = REAL_LEFT;
+    entities[2].y = REAL_HEIGHT;
+    move_sprite(4, REAL_WIDTH, REAL_HEIGHT);
+    entities[3].x = REAL_WIDTH;
+    entities[3].y = REAL_HEIGHT;
+}
 
 // Animates a sprite clockwise around the screen.
 void animateSprite(struct Entity * entity)
@@ -28,6 +68,21 @@ void animateSprite(struct Entity * entity)
             entity->xVel = -1;
             entity->yVel = 0;
         }
+    }
+}
+
+// Animates 4 entities.
+void animateEntities(struct Entity entities[])
+{
+    // Move other entity sprites / coordinates
+    for (int i = 0; i < SPRITE_QTY; i++)
+    {
+        animateSprite(&entities[i]);
+
+        scroll_sprite(entities[i].id, entities[i].xVel, entities[i].yVel);
+
+        entities[i].x += entities[i].xVel;
+        entities[i].y += entities[i].yVel;
     }
 }
 
@@ -139,13 +194,6 @@ void checkWallCollisions(struct Entity * player)
 // Returns 1 if the game should scroll map, 0 if it should scroll sprite.
 int scrollMapOrNot(struct Entity * player)
 {
-    // Lower half of the map
-    if (player->y >= MIDDLE_Y2 && player->yVel != 0)
-    {
-        if (player->y == MIDDLE_Y2) return 1;
-        else return 0;
-    } 
-
     if (player->x <= MIDDLE_X) // Left side of the map
     {
         if (player->y <= MIDDLE_Y) return 0; // Top left

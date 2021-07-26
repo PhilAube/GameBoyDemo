@@ -11,6 +11,8 @@
 #define SPRITE_SIZE 8
 
 #define MAP_SIZE 256
+#define MAP_CENTER_X 132 // (MAP_SIZE / 2) + (REAL_LEFT - (SPRITESIZE / 2))
+#define MAP_CENTER_Y 140 // (MAP_SIZE / 2) + 12 (REAL_TOP - (SPRITESIZE / 2))
 
 // So that a sprite can be placed mid-screen.
 #define MIDDLE_X 84 // (REAL_WIDTH - SPRITESIZE / 2) + SPRITESIZE;
