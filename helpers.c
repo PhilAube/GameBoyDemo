@@ -196,10 +196,20 @@ int scrollMapOrNot(struct Entity * player)
 {
     if (player->x <= MIDDLE_X) // Left side of the map
     {
-        if (player->y <= MIDDLE_Y) return 0; // Top left
+        if (player->x == MIDDLE_X && player->xVel == 1) return 1;
+
+        if (player->y <= MIDDLE_Y)
+        {
+            if (player->y == MIDDLE_Y && player->yVel == 1) return 1;
+            else return 0; // Top left
+        } 
         else
         {
-            if (player->y >= MIDDLE_Y2) return 0; // Bottom left
+            if (player->y >= MIDDLE_Y2)
+            {
+                if (player->y == MIDDLE_Y2 && player->yVel == -1) return 1;
+                else return 0; // Bottom left
+            } 
             else
             {
                 if (player->xVel == 0) return 1; // Mid-left
@@ -211,11 +221,16 @@ int scrollMapOrNot(struct Entity * player)
     {
         if (player->x >= MIDDLE_X2) // Right side of the map
         {
-            if (player->x == MIDDLE_X2) return 1;
+            if (player->x == MIDDLE_X2 && player->xVel == -1) return 1;
+
             if (player->y <= MIDDLE_Y) return 0; // Top right
             else
             {
-                if (player->y >= MIDDLE_Y2) return 0; // Bottom right
+                if (player->y >= MIDDLE_Y2)
+                {
+                    if (player->y == MIDDLE_Y2 && player->yVel == -1) return 1;
+                    else return 0; // Bottom right
+                } 
                 else
                 {
                     if (player->xVel == 0) return 1; // Mid-right
@@ -227,6 +242,8 @@ int scrollMapOrNot(struct Entity * player)
         {
             if (player->y <= MIDDLE_Y)
             {
+                if (player->y == MIDDLE_Y && player->yVel == 1) return 1;
+
                 if (player->yVel == 0) return 1; // Mid-top
                 else return 0; 
             } 
@@ -234,6 +251,8 @@ int scrollMapOrNot(struct Entity * player)
             {
                 if (player->y >= MIDDLE_Y2)
                 {
+                    if (player->y == MIDDLE_Y2 && player->yVel == -1) return 1;
+
                     if (player->yVel == 0) return 1; // Mid-bottom
                     else return 0; 
                 } 
