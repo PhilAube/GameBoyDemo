@@ -17,60 +17,23 @@ void displayPause()
         {
             windowmap[i + offset] = 0x2A + i;
         }
+
+        set_win_tiles(0, 0, 20, 2, windowmap);
+
+        pauseSound(0);
     }
     else
     {
         waitpadup();
+        pauseSound(1);
 
         for (int i = 0; i < 4; i++)
         {
             windowmap[i + offset] = 0x29;
         }
+
+        set_win_tiles(0, 0, 20, 2, windowmap);
     }
-
-    set_win_tiles(0, 0, 20, 2, windowmap);
-}
-
-// Initializes the player and sets their sprite.
-void setupPlayer(struct Entity * player)
-{
-    player->id = 0;
-    player->x = MAP_CENTER_X;
-    player->y = MAP_CENTER_Y;
-    player->xVel = 0;
-    player->yVel = 0;
-
-    // Setup player sprite
-    set_sprite_tile(player->id, 0);
-    move_sprite(player->id, MIDDLE_X, MIDDLE_Y);
-
-    // Scroll the background to the player.
-    scroll_bkg(MAP_CENTER_X - MIDDLE_X, MAP_CENTER_Y - MIDDLE_Y);
-}
-
-// Prepares the 4 entites for the animateEntities method.
-void setupEntities(struct Entity entities[])
-{
-    for (int i = 0; i < SPRITE_QTY; i++)
-    {
-        entities[i].id = i + 1;
-        entities[i].xVel = 0;
-        entities[i].yVel = 0;
-        set_sprite_tile(i + 1, 2);
-    }
-
-    move_sprite(1, REAL_LEFT, REAL_TOP);
-    entities[0].x = REAL_LEFT;
-    entities[0].y = REAL_TOP;
-    move_sprite(2, REAL_WIDTH, REAL_TOP);
-    entities[1].x = REAL_WIDTH;
-    entities[1].y = REAL_TOP;
-    move_sprite(3, REAL_LEFT, REAL_HEIGHT);
-    entities[2].x = REAL_LEFT;
-    entities[2].y = REAL_HEIGHT;
-    move_sprite(4, REAL_WIDTH, REAL_HEIGHT);
-    entities[3].x = REAL_WIDTH;
-    entities[3].y = REAL_HEIGHT;
 }
 
 // Animates a sprite clockwise around the screen.
@@ -155,7 +118,6 @@ void movePlayer(struct Entity * player)
             // Bitwise XOR to flip the pause bit (0010 0000)
             GameLoopState = GameLoopState ^ 0x20;
             waitpadup();
-            // TODO: Play sound
             break;
 
         default:

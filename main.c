@@ -1,13 +1,15 @@
 #include <gb/gb.h>
 #include <stdio.h>
+#include <gb/font.h>
 #include "main.h"
-#include "windowmap.c"
-#include "sprites.c"
 #include "entity.c"
-#include "helpers.c"
+#include "sound.c"
 #include "bgtiles.c"
 #include "bgmap.c"
-#include <gb/font.h>
+#include "windowmap.c"
+#include "sprites.c"
+#include "setup.c"
+#include "helpers.c"
 
 // Bits 7 and 6 are for lives (3-2-1-0)
 // Bit 5 is for pause
@@ -18,31 +20,12 @@ UINT8 GameLoopState = 0xC0;
 
 void main()
 {
-    // Setup font tiles for window layer
-    font_t min_font;
-    font_init();
-    min_font = font_load(font_min); // 36 tiles
-    font_set(min_font);
+    // SETUP
+    setupHardware();
 
-    // SETUP WINDOW LAYER
-    set_win_tiles(0, 0, 20, 2, windowmap);
-    move_win(7, 128);
-
-    // SETUP SPRITES AND BACKGROUND MAP
-    set_sprite_data(0, 3, sprites);
-    set_bkg_data(37, 9, bgtiles);
-    set_bkg_tiles(0, 0, 32, 32, bgmap);
-
-    SHOW_SPRITES;
-    SHOW_WIN;
-    SHOW_BKG;
-    DISPLAY_ON;
-
-    // SETUP PLAYER
     struct Entity player;
     setupPlayer(&player);
 
-    // Setting up 4 other entities and their sprites
     // struct Entity entities[SPRITE_QTY];
     // setupEntities(entities);
 
