@@ -1,13 +1,20 @@
 #include <gb/gb.h>
 #include <stdio.h>
 #include "main.h"
+#include "windowmap.c"
 #include "sprites.c"
 #include "entity.c"
 #include "helpers.c"
 #include "bgtiles.c"
 #include "bgmap.c"
 #include <gb/font.h>
-#include "windowmap.c"
+
+// Bits 7 and 6 are for lives (3-2-1-0)
+// Bit 5 is for pause
+// Bits 4 to 0 are for score (0-25)
+// 1100 0000 (0xC0) -> LIVES = 3, UNPAUSED, SCORE = 0
+// 0011 1001 -> LIVES = 0, PAUSED, SCORE = 25 
+UINT8 GameLoopState = 0xC0;
 
 void main()
 {
@@ -23,7 +30,7 @@ void main()
 
     // SETUP SPRITES AND BACKGROUND MAP
     set_sprite_data(0, 3, sprites);
-    set_bkg_data(37, 5, bgtiles);
+    set_bkg_data(37, 9, bgtiles);
     set_bkg_tiles(0, 0, 32, 32, bgmap);
 
     SHOW_SPRITES;
@@ -44,18 +51,22 @@ void main()
     {
         // Get input
         movePlayer(&player);
-        checkWallCollisions(&player);
 
-        // Move player sprite on screen
-        if (scrollMapOrNot(&player) == 1) scroll_bkg(player.xVel, player.yVel);
-        else scroll_sprite(player.id, player.xVel, player.yVel);
+        if (isPaused() == 0)
+        {
+            checkWallCollisions(&player);
 
-        // Move player coordinates
-        player.x += player.xVel;
-        player.y += player.yVel;
+            // Move player sprite on screen
+            if (scrollMapOrNot(&player) == 1) scroll_bkg(player.xVel, player.yVel);
+            else scroll_sprite(player.id, player.xVel, player.yVel);
 
-        // animateEntities(entities);
+            // Move player coordinates
+            player.x += player.xVel;
+            player.y += player.yVel;
 
-        delay(20);
+            // animateEntities(entities);
+
+            delay(20);
+        }
     }
 }

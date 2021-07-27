@@ -1,4 +1,5 @@
 // CONSTANTS
+extern UINT8 GameLoopState;
 
 // General
 #define SPRITE_QTY 4

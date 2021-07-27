@@ -1,3 +1,36 @@
+// Returns 1 if paused, 0 otherwise.
+int isPaused()
+{
+    // Bitwise AND to query the status of the pause bit (0010 0000)
+    if (GameLoopState & 0x20) return 1;
+    else return 0;
+}
+
+// Changes the window map to display the word pause if the game is paused.
+void displayPause()
+{
+    const int offset = 8;
+
+    if (isPaused() == 0)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            windowmap[i + offset] = 0x2A + i;
+        }
+    }
+    else
+    {
+        waitpadup();
+
+        for (int i = 0; i < 4; i++)
+        {
+            windowmap[i + offset] = 0x29;
+        }
+    }
+
+    set_win_tiles(0, 0, 20, 2, windowmap);
+}
+
 // Initializes the player and sets their sprite.
 void setupPlayer(struct Entity * player)
 {
@@ -86,7 +119,7 @@ void animateEntities(struct Entity entities[])
     }
 }
 
-// Modifies x/y velocities based on joypad.
+// Button handler during the game loop.
 void movePlayer(struct Entity * player)
 {
     int result = joypad();
@@ -94,24 +127,35 @@ void movePlayer(struct Entity * player)
     switch (result)
     {
         case J_LEFT:
+            if (isPaused() == 1) break;
             player->xVel = -1;
             player->yVel = 0;
             break;
 
         case J_RIGHT:
+            if (isPaused() == 1) break;
             player->xVel = 1;
             player->yVel = 0;
             break;
 
         case J_UP:
+            if (isPaused() == 1) break;
             player->xVel = 0;
             player->yVel = -1;
-
             break;
 
         case J_DOWN:
+            if (isPaused() == 1) break;
             player->xVel = 0;
             player->yVel = 1;
+            break;
+
+        case J_START:
+            displayPause();
+            // Bitwise XOR to flip the pause bit (0010 0000)
+            GameLoopState = GameLoopState ^ 0x20;
+            waitpadup();
+            // TODO: Play sound
             break;
 
         default:
