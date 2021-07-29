@@ -1,13 +1,7 @@
+// A simple entity with a position within the background map.
 struct Entity
 {
-    // SPRITE ID
-    int id;
-    
     // COORDINATES
     int x;
     int y;
-    
-    // VELOCITY
-    int xVel;
-    int yVel;
 };

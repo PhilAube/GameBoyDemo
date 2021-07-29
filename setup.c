@@ -13,13 +13,13 @@ void setupHardware()
     font_set(min_font);
 
     // Setup window layer
-    set_win_tiles(0, 0, 20, 2, windowmap);
-    move_win(7, 128);
+    set_win_tiles(0, 0, 20, 4, windowmap);
+    move_win(7, 144);
 
     // Start sprite tiles at 26 because of Nintendo logo
-    set_sprite_data(26, 3, sprites);
+    set_sprite_data(26, 4, sprites);
     // Start background tiles at 37 because of font tiles
-    set_bkg_data(37, 9, bgtiles);
+    set_bkg_data(37, 10, bgtiles);
     set_bkg_tiles(0, 0, 32, 32, bgmap);
 
     // Enable hardware
@@ -32,30 +32,39 @@ void setupHardware()
 // Initializes the player and sets their sprite.
 void setupPlayer(struct Entity * player)
 {
-    player->id = 0;
     player->x = MAP_CENTER_X;
     player->y = MAP_CENTER_Y;
-    player->xVel = 0;
-    player->yVel = 0;
+    // xVel and yVel already set globally
 
     // Setup player sprite
     // Start at 0x1A because of the Nintendo logo
-    set_sprite_tile(player->id, 0x1A);
-    move_sprite(player->id, MIDDLE_X, MIDDLE_Y);
+    set_sprite_tile(0, 0x1A);
+    move_sprite(0, MIDDLE_X, MIDDLE_Y);
 
     // Scroll the background to the player.
-    scroll_bkg(MAP_CENTER_X - MIDDLE_X, MAP_CENTER_Y - MIDDLE_Y);
+    scroll_bkg(SCROLL_OFFSET_X, SCROLL_OFFSET_Y);
+}
+
+// TODO : Spawn coins randomly
+void setupCoins(struct Entity coins[])
+{
+    for (int i = 0; i < ENTITY_QTY; i++)
+    {
+        // TODO: Get random X and Y
+        coins[i].x = (i + 3) * 8 - SCROLL_OFFSET_X;
+        coins[i].y = 32 - SCROLL_OFFSET_Y;
+        set_sprite_tile(i + 1, 0x1C);
+        move_sprite(i + 1, coins[i].x, coins[i].y);
+    }
 }
 
 // Prepares the 4 entites for the animateEntities method.
 void setupEntities(struct Entity entities[])
 {
-    for (int i = 0; i < SPRITE_QTY; i++)
+    for (int i = 0; i < 4; i++)
     {
-        entities[i].id = i + 1;
-        entities[i].xVel = 0;
-        entities[i].yVel = 0;
-        set_sprite_tile(i + 1, 2);
+        // X and Y velocities already set globally
+        set_sprite_tile(i + 1, 0x1A);
     }
 
     move_sprite(1, REAL_LEFT, REAL_TOP);

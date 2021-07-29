@@ -18,38 +18,62 @@
 // 0011 1001 -> LIVES = 0, PAUSED, SCORE = 25 
 UINT8 GameLoopState = 0xC0;
 
+// Bit 7 and 6 are for pause menu selected choice
+// Bit 5 is START HOLD bit, meaning if true, START is being held.
+// Rest are game context (title screen, game loop, etc.)
+UINT8 GameState = 0x00;
+
+UINT8 clock = 0; // For timing events.
+int xVel = 0; // Player x velocity
+int yVel = 0; // Player y velocity
+int xVels[25] = {0}; // For other moving entities
+int yVels[25] = {0}; // For other moving entities
+
 void main()
 {
-    // SETUP
+    // SETUP GRAPHICS AND SOUND
     setupHardware();
 
+    // SETUP PLAYER
     struct Entity player;
     setupPlayer(&player);
 
-    // struct Entity entities[SPRITE_QTY];
-    // setupEntities(entities);
+    // SETUP COINS
+    // struct Entity coins[ENTITY_QTY];
+    // setupCoins(coins);
 
     // GAME LOOP
     while (1)
     {
         // Get input
-        movePlayer(&player);
+        movePlayer();
 
-        if (isPaused() == 0)
+        if (!isPaused())
         {
-            checkWallCollisions(&player);
+            if (clock > 0) scrollHUDDown(); // Unpause window layer scrolldown
+            else
+            {
+                checkWallCollisions(&player);
+                // checkPlayerCoinCollisions(&player, coins);                
 
-            // Move player sprite on screen
-            if (scrollMapOrNot(&player) == 1) scroll_bkg(player.xVel, player.yVel);
-            else scroll_sprite(player.id, player.xVel, player.yVel);
+                if (scrollMapOrNot(&player)) // Scroll background and entities, not player
+                {
+                    scroll_bkg(xVel, yVel);
+                    // scrollCoins(coins);
+                } 
+                else scroll_sprite(0, xVel, yVel); // Scroll player, not BG and entities
 
-            // Move player coordinates
-            player.x += player.xVel;
-            player.y += player.yVel;
+                // Move player coordinates
+                player.x += xVel;
+                player.y += yVel;
 
-            // animateEntities(entities);
-
-            delay(20);
+                delay(10);
+                // performantDelay(1);
+            }
+        }
+        else // if isPaused
+        {
+            if (clock < 144) scrollHUDUp(); // Pause window layer scrollup
         }
     }
 }
