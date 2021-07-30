@@ -34,7 +34,7 @@ void updateHUD()
     windowmap[offset2] = 0x01; // First digit will always be 0
     windowmap[offset2 + 1] = lives + 1; // Second is the number of lives.
 
-    set_win_tiles(0, 0, 20, 4, windowmap);
+    set_win_tiles(0, 0, 20, 18, windowmap);
 }
 
 // Increments points and hides coin if player is colliding with one.
@@ -60,21 +60,27 @@ void checkPlayerCoinCollisions(struct Entity * player, struct Entity coins[])
 // (PAUSE) Hides sprites and scrolls the pause screen into view.
 void scrollHUDUp()
 {
-    if (clock == 0) HIDE_SPRITES;
+    HIDE_SPRITES;
 
-    scroll_win(0, -1);
-    clock++;
-    delay(1);
+    while (clock < 144)
+    {
+        scroll_win(0, -1);
+        delay(1);
+        clock++;
+    }
 }
 
 // (UNPAUSE) Scrolls the pause screen out of view and unhides sprites.
 void scrollHUDDown()
 {
-    scroll_win(0, 1);
-    clock--;
-    delay(1);
+    while (clock > 0)
+    {
+        scroll_win(0, 1);
+        clock--;
+        delay(1);
+    }
 
-    if (clock == 0) SHOW_SPRITES;
+    SHOW_SPRITES;
 }
 
 // Scrolls coins to follow along with BG
@@ -88,67 +94,12 @@ void scrollCoins(struct Entity coins[])
     }
 }
 
-// An alternative to delay() which can save battery.
-void performantDelay(int n)
-{
-    for (int i = 0; i < n; i++)
-    {
-        wait_vbl_done();
-    }
-}
-
 // Returns 1 if paused, 0 otherwise.
 int isPaused()
 {
     // Bitwise AND to query the status of the pause bit (0010 0000)
     if (GameLoopState & 0x20) return 1;
     else return 0;
-}
-
-// Animates a sprite clockwise around the screen.
-void animateSprite(struct Entity * entity, int index)
-{
-    if (entity->x == REAL_LEFT)
-    {
-        if (entity->y == REAL_TOP) // Top left
-        {
-            yVels[index] = 0;
-            xVels[index] = 1;
-        }
-        else if (entity->y == REAL_HEIGHT) // Bottom left
-        {
-            yVels[index] = -1;
-            xVels[index] = 0;
-        }
-    }
-    else if (entity->x == REAL_WIDTH)
-    {
-        if (entity->y == REAL_TOP) // TOp right
-        {
-            yVels[index] = 1;
-            xVels[index] = 0;
-        }
-        else if (entity->y == REAL_HEIGHT) // Bottom right
-        {
-            xVels[index] = -1;
-            yVels[index] = 0;
-        }
-    }
-}
-
-// Animates 4 entities.
-void animateEntities(struct Entity entities[])
-{
-    // Move other entity sprites / coordinates
-    for (int i = 0; i < 4; i++)
-    {
-        animateSprite(&entities[i], i);
-
-        scroll_sprite(i + 1, xVels[i], yVels[i]);
-
-        entities[i].x += xVels[i];
-        entities[i].y += yVels[i];
-    }
 }
 
 // Button handler during the game loop.
@@ -184,28 +135,17 @@ void movePlayer()
             break;
 
         case J_START:
-            if (clock == 0 && !(GameState & 0x20)) // Only if START isn't being pressed
+            if (clock == 0)
             {
                 pauseSound(0);
-                // Bitwise XOR to flip the START HOLD bit (0010 0000)
-                GameState = GameState ^ 0x20; 
-                // Bitwise XOR to flip the pause bit (0010 0000)
-                GameLoopState = GameLoopState ^ 0x20;
-            }
-            else if (clock == 144 && !(GameState & 0x20)) // Only if START isn't being pressed
-            {
-                waitpadup(); // Only unpause when player lets go
-                pauseSound(1);
+                scrollHUDUp();
+                waitpadup();
                 // Bitwise XOR to flip the pause bit (0010 0000)
                 GameLoopState = GameLoopState ^ 0x20;
             }
             break;
 
-        default:
-            // Start button is not being held (by default)
-            // Bitwise AND to mask 5th bit to 0 (1101 1111)
-            GameState = GameState & 0xDF; 
-            break;
+        default: break;
     }
 }
 
@@ -352,6 +292,85 @@ int scrollMapOrNot(struct Entity * player)
                 } 
                 else return 1; // Middle AF
             }
+        }
+    }
+}
+
+// Prepares the game loop.
+void initGame()
+{
+    // SETUP BACKGOUND
+    set_bkg_tiles(0, 0, 32, 32, bgmap);
+
+    countdownSound();
+    
+    GameState++;
+}
+
+// Main game loop with some entity setup.
+void gameLoop()
+{
+    int counter = 1;
+
+    // SETUP PLAYER
+    struct Entity player;
+    setupPlayer(&player);
+
+    // SETUP COINS
+    // struct Entity coins[ENTITY_QTY];
+    // setupCoins(coins);
+
+    // GAME LOOP
+    while (1)
+    {
+        if (!isPaused())
+        {
+            if (clock > 0) scrollHUDDown(); // Unpause window layer scrolldown
+            else
+            {
+                // Get input
+                movePlayer();
+                checkWallCollisions(&player);
+                // checkPlayerCoinCollisions(&player, coins);                
+
+                if (scrollMapOrNot(&player)) // Scroll background and entities, not player
+                {
+                    scroll_bkg(xVel, yVel);
+                    // scrollCoins(coins);
+                } 
+                else scroll_sprite(0, xVel, yVel); // Scroll player, not BG and entities
+
+                // Move player coordinates
+                player.x += xVel;
+                player.y += yVel;
+
+                wait_vbl_done();
+                // delay(10);
+                // performantDelay(1);
+            }
+        }
+        else // if isPaused
+        {
+            if (clock == 144)
+            {
+                switch (joypad())
+                {
+                    case J_START:
+                        if (!(GameState & 0x20)) // Only if START isn't being pressed
+                        {
+                            waitpadup();
+                            pauseSound(1);
+                            // Bitwise XOR to flip the pause bit (0010 0000)
+                            GameLoopState = GameLoopState ^ 0x20;
+                        }
+                        break;
+                    
+                    default: break;
+                }
+            }
+
+            /*if (clock < 144) scrollHUDUp(); // Pause window layer scrollup
+            else */
         }
     }
 }

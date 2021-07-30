@@ -13,14 +13,15 @@ void setupHardware()
     font_set(min_font);
 
     // Setup window layer
-    set_win_tiles(0, 0, 20, 4, windowmap);
+    set_win_tiles(0, 0, 20, 18, windowmap);
     move_win(7, 144);
 
     // Start sprite tiles at 26 because of Nintendo logo
     set_sprite_data(26, 4, sprites);
     // Start background tiles at 37 because of font tiles
-    set_bkg_data(37, 10, bgtiles);
-    set_bkg_tiles(0, 0, 32, 32, bgmap);
+    set_bkg_data(37, 28, bgtiles);
+    // First, title screen map is set
+    set_bkg_tiles(0, 0, 20, 10, titlescreenmap);
 
     // Enable hardware
     SHOW_SPRITES;

@@ -3,12 +3,14 @@
 #include <gb/font.h>
 #include "main.h"
 #include "entity.c"
-#include "sound.c"
 #include "bgtiles.c"
 #include "bgmap.c"
 #include "windowmap.c"
+#include "sound.c"
+#include "titlescreenmap.c"
 #include "sprites.c"
 #include "setup.c"
+#include "titlescreen.c"
 #include "helpers.c"
 
 // Bits 7 and 6 are for lives (3-2-1-0)
@@ -18,8 +20,8 @@
 // 0011 1001 -> LIVES = 0, PAUSED, SCORE = 25 
 UINT8 GameLoopState = 0xC0;
 
-// Bit 7 and 6 are for pause menu selected choice
-// Bit 5 is START HOLD bit, meaning if true, START is being held.
+// Bit 7 and 6 are for menu selected choice
+// Bit 5 used to be START HOLD but now obsolete.
 // Rest are game context (title screen, game loop, etc.)
 UINT8 GameState = 0x00;
 
@@ -34,46 +36,22 @@ void main()
     // SETUP GRAPHICS AND SOUND
     setupHardware();
 
-    // SETUP PLAYER
-    struct Entity player;
-    setupPlayer(&player);
-
-    // SETUP COINS
-    // struct Entity coins[ENTITY_QTY];
-    // setupCoins(coins);
-
-    // GAME LOOP
     while (1)
     {
-        // Get input
-        movePlayer();
+        // Bitwise AND to get the two last bits
+        int context = GameState & 0x03;
 
-        if (!isPaused())
+        switch (context)
         {
-            if (clock > 0) scrollHUDDown(); // Unpause window layer scrolldown
-            else
-            {
-                checkWallCollisions(&player);
-                // checkPlayerCoinCollisions(&player, coins);                
-
-                if (scrollMapOrNot(&player)) // Scroll background and entities, not player
-                {
-                    scroll_bkg(xVel, yVel);
-                    // scrollCoins(coins);
-                } 
-                else scroll_sprite(0, xVel, yVel); // Scroll player, not BG and entities
-
-                // Move player coordinates
-                player.x += xVel;
-                player.y += yVel;
-
-                delay(10);
-                // performantDelay(1);
-            }
-        }
-        else // if isPaused
-        {
-            if (clock < 144) scrollHUDUp(); // Pause window layer scrollup
+            case 0:
+                titleScreen();
+                break;
+            case 1:
+                initGame();
+            case 2:
+                gameLoop();
+            default:
+                break;
         }
     }
 }
