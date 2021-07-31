@@ -12,11 +12,25 @@ int areSpritesColliding(struct Entity * o1, struct Entity * o2)
     return 0;
 }
 
+// Returns the index of the menu choice. (0-based)
+int getSelectedMenuChoice()
+{
+    int menuChoice = GameState;
+    menuChoice = menuChoice & 0xC0; // Bitwise AND to mask last 6 bits to 0 (1100 0000)
+    menuChoice = menuChoice >> 6; // Bitshift to get the actual menu choice value
+
+    return menuChoice;
+}
+
 // Writes the score / lives to the window layer.
 void updateHUD()
 {
     const int offset1 = 46; // Tile to start displaying score
     const int offset2 = 52; // Tile to start displaying lives
+
+    const int offset3 = 145; // Play cursor
+    const int offset4 = 205; // Restart cursor
+    const int offset5 = 265; // Quit cursor
 
     // Score
     UINT8 score = GameLoopState;
@@ -33,6 +47,32 @@ void updateHUD()
     lives = lives >> 6; // Bitshift to get the actual lives value
     windowmap[offset2] = 0x01; // First digit will always be 0
     windowmap[offset2 + 1] = lives + 1; // Second is the number of lives.
+
+    int menuChoice = getSelectedMenuChoice();
+
+    // Pause menu choice
+    switch (menuChoice) // Bitwise AND to get the menu choice
+    {
+        case 0: // Play
+            windowmap[offset3] = 0x30; // Play
+            windowmap[offset4] = 0x00;
+            windowmap[offset5] = 0x00;
+            break;
+
+        case 1: // Restart
+            windowmap[offset3] = 0x00; 
+            windowmap[offset4] = 0x30; // Restart
+            windowmap[offset5] = 0x00;
+            break;
+
+        case 2: // Quit
+            windowmap[offset3] = 0x00;
+            windowmap[offset4] = 0x00; 
+            windowmap[offset5] = 0x30; // Quit
+            break;
+
+        default: break;
+    }
 
     set_win_tiles(0, 0, 20, 18, windowmap);
 }
@@ -58,9 +98,9 @@ void checkPlayerCoinCollisions(struct Entity * player, struct Entity coins[])
 }
 
 // (PAUSE) Hides sprites and scrolls the pause screen into view.
-void scrollHUDUp()
+void scrollHUDUp(int hide)
 {
-    HIDE_SPRITES;
+    if (hide) HIDE_SPRITES;
 
     while (clock < 144)
     {
@@ -71,7 +111,7 @@ void scrollHUDUp()
 }
 
 // (UNPAUSE) Scrolls the pause screen out of view and unhides sprites.
-void scrollHUDDown()
+void scrollHUDDown(int show)
 {
     while (clock > 0)
     {
@@ -80,7 +120,7 @@ void scrollHUDDown()
         delay(1);
     }
 
-    SHOW_SPRITES;
+    if (show) SHOW_SPRITES;
 }
 
 // Scrolls coins to follow along with BG
@@ -105,8 +145,8 @@ int isPaused()
 // Button handler during the game loop.
 void movePlayer()
 {
+    const int offset = 8;
     int result = joypad();
-    UINT8 status = 0;
 
     switch (result)
     {
@@ -134,12 +174,14 @@ void movePlayer()
             yVel = 1;
             break;
 
-        case J_START:
+        case J_START: // Pause
             if (clock == 0)
             {
-                pauseSound(0);
-                scrollHUDUp();
+                changePauseMenu();
+                pauseSound();
+                scrollHUDUp(1);
                 waitpadup();
+                
                 // Bitwise XOR to flip the pause bit (0010 0000)
                 GameLoopState = GameLoopState ^ 0x20;
             }
@@ -302,15 +344,49 @@ void initGame()
     // SETUP BACKGOUND
     set_bkg_tiles(0, 0, 32, 32, bgmap);
 
-    countdownSound();
+    countdown();
     
     GameState++;
+}
+
+// Resets all the game loop data.
+void resetGame(struct Entity * player)
+{
+    const int offset1 = 8;
+    const int offset2 = 145; // Play 
+    const int offset3 = 205; // Restart 
+    const int offset4 = 265; // Quit 
+
+    // Bitwise AND to set the pause bit to 0 (1101 1111)
+    GameLoopState = GameLoopState & 0xDF;
+
+    // Bitwise AND to mask the menu choice bits to 0
+    GameState = GameState & 0x3F;
+
+    // Set window tiles back (pause)
+    for (int i = 0; i < 4; i++) windowmap[i + offset1] = 0x29;
+    // Reset play line
+    for (int i = 0; i < 10; i++) windowmap[i + offset2] = 0x00;
+    // Reset restart line
+    for (int i = 0; i < 10; i++) windowmap[i + offset3] = 0x00;
+    // Reset quit line
+    for (int i = 0; i < 10; i++) windowmap[i + offset4] = 0x00;
+
+    // Must set window tiles outside function call
+
+    // Reset player and sprite
+    set_sprite_tile(0, 0x00);
+    move_sprite(0, 0, 0);
+    player->x = 0;
+    player->y = 0;
+    xVel = 0;
+    yVel = 0;
 }
 
 // Main game loop with some entity setup.
 void gameLoop()
 {
-    int counter = 1;
+    const int offset1 = 8;
 
     // SETUP PLAYER
     struct Entity player;
@@ -321,11 +397,11 @@ void gameLoop()
     // setupCoins(coins);
 
     // GAME LOOP
-    while (1)
+    while (GameState & 0x02) // While context is game loop (xxxx xx10)
     {
         if (!isPaused())
         {
-            if (clock > 0) scrollHUDDown(); // Unpause window layer scrolldown
+            if (clock > 0) scrollHUDDown(1); // Game start window scrolldown hides setup
             else
             {
                 // Get input
@@ -346,31 +422,11 @@ void gameLoop()
 
                 wait_vbl_done();
                 // delay(10);
-                // performantDelay(1);
             }
         }
         else // if isPaused
         {
-            if (clock == 144)
-            {
-                switch (joypad())
-                {
-                    case J_START:
-                        if (!(GameState & 0x20)) // Only if START isn't being pressed
-                        {
-                            waitpadup();
-                            pauseSound(1);
-                            // Bitwise XOR to flip the pause bit (0010 0000)
-                            GameLoopState = GameLoopState ^ 0x20;
-                        }
-                        break;
-                    
-                    default: break;
-                }
-            }
-
-            /*if (clock < 144) scrollHUDUp(); // Pause window layer scrollup
-            else */
+            if (clock == 144) pauseMenu(&player);
         }
     }
 }

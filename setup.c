@@ -21,7 +21,7 @@ void setupHardware()
     // Start background tiles at 37 because of font tiles
     set_bkg_data(37, 28, bgtiles);
     // First, title screen map is set
-    set_bkg_tiles(0, 0, 20, 10, titlescreenmap);
+    set_bkg_tiles(0, 0, 20, 18, titlescreenmap);
 
     // Enable hardware
     SHOW_SPRITES;
@@ -43,7 +43,7 @@ void setupPlayer(struct Entity * player)
     move_sprite(0, MIDDLE_X, MIDDLE_Y);
 
     // Scroll the background to the player.
-    scroll_bkg(SCROLL_OFFSET_X, SCROLL_OFFSET_Y);
+    move_bkg(SCROLL_OFFSET_X, SCROLL_OFFSET_Y);
 }
 
 // TODO : Spawn coins randomly

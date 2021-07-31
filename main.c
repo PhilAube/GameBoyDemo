@@ -11,6 +11,7 @@
 #include "sprites.c"
 #include "setup.c"
 #include "titlescreen.c"
+#include "pause.c"
 #include "helpers.c"
 
 // Bits 7 and 6 are for lives (3-2-1-0)
@@ -20,8 +21,7 @@
 // 0011 1001 -> LIVES = 0, PAUSED, SCORE = 25 
 UINT8 GameLoopState = 0xC0;
 
-// Bit 7 and 6 are for menu selected choice
-// Bit 5 used to be START HOLD but now obsolete.
+// Bit 7-6 are for menu selected choice
 // Rest are game context (title screen, game loop, etc.)
 UINT8 GameState = 0x00;
 

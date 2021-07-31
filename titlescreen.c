@@ -56,6 +56,8 @@ void titleScreen()
         wait_vbl_done();
     }
 
+    pauseSound();
+
     // Next context
     GameState++;
     HIDE_SPRITES;
@@ -72,7 +74,9 @@ void titleScreen()
     while (clock < 144)
     {
         scroll_win(0, -1);
-        delay(1);
+        delay(2);
         clock++;
     }
+
+    delay(150);
 }
